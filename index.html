@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker for LLMs, Agents &amp; MCP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+<style>
+  :root { --amber:#f5a623; --green:#4ecb8d; --purple:#a78bfa; --blue:#60a5fa; --red:#f87171; --bg:#0a0a0f; --bg2:#10101a; --bg3:#181824; --border:#2a2a3a; --text:#e8e8f0; --muted:#8888a8; }
+  .reveal-viewport { background: var(--bg); }
+  .reveal .slides section { background: transparent; }
+  .reveal { font-family: 'DM Sans', sans-serif; color: var(--text); }
+  .reveal h1,.reveal h2,.reveal h3 { font-family: 'Playfair Display', serif; font-weight: 700; }
+  .reveal h1 { font-size: 1.6em; color: var(--amber); line-height: 1.1; }
+  .reveal h2 { font-size: 1.1em; color: var(--amber); margin-bottom: .2em; }
+  .reveal h3 { font-size: .78em; color: var(--green); margin-bottom: .15em; }
+  .reveal p { font-size: .56em; line-height: 1.45; color: var(--text); }
+  .reveal li { font-size: .54em; line-height: 1.45; margin-bottom: .1em; }
+  .reveal code { font-family: 'JetBrains Mono', monospace; font-size: .72em; }
+  .reveal pre { box-shadow: none; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: .3em .5em; margin: .25em 0; }
+  .reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #cdd6f4; }
+  .slide-hdr { display: flex; align-items: center; gap: .4em; border-bottom: 1px solid var(--border); padding-bottom: .2em; margin-bottom: .3em; }
+  .slide-hdr .tag { font-family: 'JetBrains Mono', monospace; font-size: .42em; font-weight: 500; color: var(--bg); background: var(--amber); padding: .1em .4em; border-radius: 3px; letter-spacing: .04em; }
+  .slide-hdr h2 { margin: 0; font-size: .95em; }
+  .cols { display: grid; gap: .5em; } .cols-2 { grid-template-columns: 1fr 1fr; } .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: .35em .6em; }
+  .card.amber { border-left: 3px solid var(--amber); } .card.green { border-left: 3px solid var(--green); }
+  .card.purple { border-left: 3px solid var(--purple); } .card.blue { border-left: 3px solid var(--blue); }
+  .card.red { border-left: 3px solid var(--red); }
+  .card h3 { font-size: .64em; margin: 0 0 .12em; } .card p { font-size: .52em; margin: 0; color: #b8b8d0; }
+  .card ul { margin: 0; padding-left: 1em; } .card li { font-size: .52em; color: #b8b8d0; margin-bottom: .02em; }
+  .reveal table { width: 100%; border-collapse: collapse; font-size: .5em; }
+  .reveal table th { background: var(--bg3); color: var(--amber); font-weight: 600; padding: .2em .4em; border: 1px solid var(--border); text-align: left; }
+  .reveal table td { padding: .18em .4em; border: 1px solid var(--border); color: #ccc; }
+  .reveal table tr:nth-child(even) td { background: #0e0e18; }
+  .a { color: var(--amber); font-weight: 600; } .g { color: var(--green); font-weight: 600; }
+  .p { color: var(--purple); font-weight: 600; } .b { color: var(--blue); font-weight: 600; }
+  .r { color: var(--red); font-weight: 600; } .mono { font-family: 'JetBrains Mono', monospace; }
+  .pill { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: .44em; padding: .08em .4em; border-radius: 99px; border: 1px solid; margin: 0 .08em; }
+  .pill.amber { color: var(--amber); border-color: var(--amber); } .pill.green { color: var(--green); border-color: var(--green); }
+  .pill.purple { color: var(--purple); border-color: var(--purple); } .pill.blue { color: var(--blue); border-color: var(--blue); }
+  .reveal .slide-footer { display: none; }
+  .title-slide h1 { font-size: 1.8em; }
+  .title-slide .subtitle { font-size: .7em; color: var(--green); font-family: 'DM Sans', sans-serif; font-weight: 300; letter-spacing: .04em; margin: .3em 0 .6em; }
+  .title-slide .meta { font-size: .48em; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .ss-row { display: flex; gap: .25em; align-items: center; margin: .1em 0; font-size: .55em; font-family: 'JetBrains Mono', monospace; }
+  .ss-node { padding: .2em .55em; border-radius: 5px; font-size: .9em; background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+  .ss-node.active { background: #1a2a1a; border-color: var(--green); color: var(--green); }
+  .ss-node.done { background: #1a1a2a; border-color: var(--purple); color: var(--purple); }
+  .ss-arrow { color: var(--amber); }
+  .reveal ul, .reveal ol { margin: .15em 0 .15em 1em; }
+  .reveal .slides > section { display: flex !important; flex-direction: column !important; overflow-y: auto !important; align-items: stretch !important; justify-content: flex-start !important; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ============ SLIDE 1: TITLE ============ -->
+<section class="title-slide">
+  <h1>Docker for LLMs, Agents &amp; MCP</h1>
+  <p class="subtitle">Containerising the AI Stack from Inference to Orchestration</p>
+  <div style="margin: .4em 0;">
+    <span class="pill amber">LLMs</span>
+    <span class="pill green">Agents</span>
+    <span class="pill purple">MCP</span>
+    <span class="pill blue">Docker</span>
+  </div>
+  <div class="ss-row" style="justify-content:center; margin-top:.5em;">
+    <span class="ss-node active">LLM</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Agent</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">MCP Server</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Gateway</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Client</span>
+  </div>
+  <p class="meta" style="margin-top:.6em;">2026-04-14 &nbsp;|&nbsp; Brendan Lynskey</p>
+</section>
+
+<!-- ============ SLIDE 2: WHY CONTAINERISE LLMs ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">01</span><h2>Why Containerise LLMs?</h2></div>
+  <div class="cols cols-3">
+    <div class="card amber">
+      <h3>Reproducibility</h3>
+      <p>Pin CUDA, Python, and library versions. No more "works on my machine" for inference.</p>
+    </div>
+    <div class="card green">
+      <h3>GPU Isolation</h3>
+      <p>Assign specific GPUs per container. Run multiple models on one host without conflicts.</p>
+    </div>
+    <div class="card purple">
+      <h3>Dependency Hell</h3>
+      <p>torch, transformers, CUDA, cuDNN &mdash; each model needs its own universe. Containers solve this.</p>
+    </div>
+  </div>
+  <div class="cols cols-2" style="margin-top:.4em;">
+    <div class="card blue">
+      <h3>Portability</h3>
+      <p>Build once, deploy anywhere &mdash; laptop, on-prem GPU server, or cloud VM with identical behaviour.</p>
+    </div>
+    <div class="card red">
+      <h3>Security</h3>
+      <p>Isolate model serving from host. Limit network, filesystem, and process access with container boundaries.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 3: GPU PASSTHROUGH ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">02</span><h2>GPU Passthrough with Docker</h2></div>
+  <h3>nvidia-container-toolkit Setup</h3>
+  <pre><code class="language-bash"># Install the NVIDIA Container Toolkit
+sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+
+# Verify GPU access inside a container
+docker run --rm --gpus all nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi</code></pre>
+  <h3>Key Flags</h3>
+  <table>
+    <tr><th>Flag</th><th>Effect</th></tr>
+    <tr><td><code>--gpus all</code></td><td>Expose every GPU to the container</td></tr>
+    <tr><td><code>--gpus '"device=0,1"'</code></td><td>Expose only GPU 0 and 1</td></tr>
+    <tr><td><code>--runtime=nvidia</code></td><td>Use NVIDIA runtime (alternative to --gpus)</td></tr>
+    <tr><td><code>--shm-size=1g</code></td><td>Increase shared memory for large model loading</td></tr>
+    <tr><td><code>NVIDIA_VISIBLE_DEVICES</code></td><td>Environment variable alternative to --gpus</td></tr>
+  </table>
+</section>
+
+<!-- ============ SLIDE 4: RUNNING OLLAMA IN DOCKER ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">03</span><h2>Running Ollama in Docker</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Quick Start</h3>
+      <pre><code class="language-bash"># CPU only
+docker run -d -p 11434:11434 \
+  --name ollama \
+  -v ollama_data:/root/.ollama \
+  ollama/ollama
+
+# With GPU
+docker run -d --gpus all \
+  -p 11434:11434 \
+  --name ollama \
+  -v ollama_data:/root/.ollama \
+  ollama/ollama</code></pre>
+    </div>
+    <div class="card green">
+      <h3>Pulling &amp; Running Models</h3>
+      <pre><code class="language-bash"># Pull a model
+docker exec ollama \
+  ollama pull llama3.1:8b
+
+# Run inference
+curl http://localhost:11434/api/generate \
+  -d '{
+    "model": "llama3.1:8b",
+    "prompt": "Explain Docker in one sentence",
+    "stream": false
+  }'</code></pre>
+    </div>
+  </div>
+  <p style="margin-top:.3em;"><span class="a">Key insight:</span> Mount a named volume at <code>/root/.ollama</code> so model weights persist across container restarts. Multiple Ollama containers can share the same volume read-only.</p>
+</section>
+
+<!-- ============ SLIDE 5: vLLM, TGI, and llama.cpp ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">04</span><h2>vLLM, TGI &amp; llama.cpp in Docker</h2></div>
+  <div class="cols cols-3">
+    <div class="card amber">
+      <h3>vLLM</h3>
+      <pre><code class="language-bash">docker run --gpus all \
+  -p 8000:8000 \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  vllm/vllm-openai:latest \
+  --model meta-llama/Llama-3.1-8B-Instruct \
+  --max-model-len 8192 \
+  --tensor-parallel-size 2</code></pre>
+      <p>OpenAI-compatible API. PagedAttention for throughput.</p>
+    </div>
+    <div class="card green">
+      <h3>Text Generation Inference</h3>
+      <pre><code class="language-bash">docker run --gpus all \
+  -p 8080:80 \
+  -v ~/models:/data \
+  ghcr.io/huggingface/\
+text-generation-inference:latest \
+  --model-id meta-llama/\
+Llama-3.1-8B-Instruct \
+  --quantize awq</code></pre>
+      <p>HuggingFace's production server. Flash Attention, AWQ support.</p>
+    </div>
+    <div class="card purple">
+      <h3>llama.cpp (GGUF)</h3>
+      <pre><code class="language-bash">docker run --gpus all \
+  -p 8080:8080 \
+  -v ~/models:/models \
+  ghcr.io/ggerganov/\
+llama.cpp:server \
+  -m /models/llama-3.1-8b.Q4_K_M.gguf \
+  --n-gpu-layers 35 \
+  --ctx-size 4096</code></pre>
+      <p>CPU-friendly. GGUF quantised models. Great for edge.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 6: MODEL WEIGHT MANAGEMENT ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">05</span><h2>Model Weight Management</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Volume Strategies</h3>
+      <ul>
+        <li><span class="a">Named volumes</span> &mdash; <code>docker volume create models</code></li>
+        <li><span class="g">Bind mounts</span> &mdash; <code>-v ~/models:/models</code></li>
+        <li><span class="p">Shared cache</span> &mdash; Mount HuggingFace cache read-only across containers</li>
+        <li><span class="b">Multi-stage builds</span> &mdash; Download weights at build time, bake into image</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Best Practices</h3>
+      <ul>
+        <li>Never bake large model weights into images (10GB+ layers)</li>
+        <li>Use <code>:ro</code> flag for shared model volumes</li>
+        <li>Set <code>HF_HOME</code> and <code>TRANSFORMERS_CACHE</code> to the mounted path</li>
+        <li>Pre-pull models in an init container or entrypoint script</li>
+        <li>Use a model registry (MLflow, DVC) for version control</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-yaml"># docker-compose.yml — shared model cache
+volumes:
+  hf_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/huggingface_cache
+
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    volumes:
+      - hf_cache:/root/.cache/huggingface:ro</code></pre>
+</section>
+
+<!-- ============ SLIDE 7: MULTI-MODEL SERVING ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">06</span><h2>Multi-Model Serving Patterns</h2></div>
+  <div class="ss-row" style="justify-content:center; margin-bottom:.4em;">
+    <span class="ss-node">Client</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Router / LB</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">LLM-A (GPU 0)</span>
+  </div>
+  <div class="ss-row" style="justify-content:center; margin-bottom:.4em;">
+    <span style="visibility:hidden" class="ss-node">Client</span>
+    <span style="visibility:hidden" class="ss-arrow">&rarr;</span>
+    <span style="visibility:hidden" class="ss-node active">Router / LB</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">LLM-B (GPU 1)</span>
+  </div>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3>Sidecar Pattern</h3>
+      <ul>
+        <li>Each agent container gets its own LLM sidecar</li>
+        <li>Communication via localhost</li>
+        <li>Simple but resource-heavy</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Shared Service Pattern</h3>
+      <ul>
+        <li>Centralised LLM service on the Docker network</li>
+        <li>Nginx or Traefik as reverse proxy</li>
+        <li>Route by model name to specific containers</li>
+        <li>Better GPU utilisation</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-yaml"># Route by model name
+services:
+  llm-small:
+    image: ollama/ollama
+    deploy: { resources: { reservations: { devices: [{ capabilities: [gpu], count: 1 }] } } }
+  llm-large:
+    image: vllm/vllm-openai:latest
+    command: ["--model", "meta-llama/Llama-3.1-70B-Instruct", "--tensor-parallel-size", "4"]
+    deploy: { resources: { reservations: { devices: [{ capabilities: [gpu], count: 4 }] } } }</code></pre>
+</section>
+
+<!-- ============ SLIDE 8: WHY AGENTS NEED CONTAINERS ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">07</span><h2>Why Agents Need Containerisation</h2></div>
+  <div class="cols cols-3">
+    <div class="card amber">
+      <h3>Sandboxing</h3>
+      <p>Agents execute arbitrary code &mdash; file writes, shell commands, API calls. Containers limit the blast radius.</p>
+    </div>
+    <div class="card green">
+      <h3>Tool Isolation</h3>
+      <p>Each tool (code interpreter, browser, database) runs in its own container with minimal permissions.</p>
+    </div>
+    <div class="card purple">
+      <h3>Reproducibility</h3>
+      <p>Agent behaviour depends on installed packages, API keys, and system state. Containers freeze all of it.</p>
+    </div>
+  </div>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card blue">
+      <h3>Scaling</h3>
+      <ul>
+        <li>Spin up agent instances per user/request</li>
+        <li>Horizontal scaling with Docker Compose <code>--scale</code></li>
+        <li>Ephemeral containers for stateless agents</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3>Security Boundaries</h3>
+      <ul>
+        <li>Read-only filesystems (<code>--read-only</code>)</li>
+        <li>No network access (<code>--network=none</code>)</li>
+        <li>Drop all capabilities (<code>--cap-drop=ALL</code>)</li>
+        <li>Resource limits (<code>--memory</code>, <code>--cpus</code>)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 9: CONTAINERISING LANGCHAIN / LANGGRAPH ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">08</span><h2>Containerising LangChain / LangGraph Agents</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Dockerfile</h3>
+      <pre><code class="language-dockerfile">FROM python:3.12-slim
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY agent/ ./agent/
+COPY tools/ ./tools/
+
+ENV OPENAI_API_KEY=""
+ENV LANGCHAIN_TRACING_V2=true
+
+EXPOSE 8000
+CMD ["uvicorn", "agent.server:app", \
+     "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+    </div>
+    <div class="card green">
+      <h3>LangGraph Agent Server</h3>
+      <pre><code class="language-python"># agent/server.py
+from fastapi import FastAPI
+from langgraph.prebuilt import create_react_agent
+from langchain_openai import ChatOpenAI
+
+app = FastAPI()
+llm = ChatOpenAI(model="gpt-4o")
+agent = create_react_agent(llm, tools=[...])
+
+@app.post("/invoke")
+async def invoke(query: str):
+    result = await agent.ainvoke(
+        {"messages": [("user", query)]}
+    )
+    return result</code></pre>
+    </div>
+  </div>
+  <p><span class="a">Tip:</span> Use <code>langgraph deploy</code> for production &mdash; it generates an optimised Dockerfile with checkpointing and streaming built in.</p>
+</section>
+
+<!-- ============ SLIDE 10: CONTAINERISING CREWAI ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">09</span><h2>Containerising CrewAI Multi-Agent Systems</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>CrewAI Dockerfile</h3>
+      <pre><code class="language-dockerfile">FROM python:3.12-slim
+WORKDIR /app
+
+RUN pip install crewai crewai-tools
+COPY crew_config/ ./crew_config/
+COPY main.py .
+
+CMD ["python", "main.py"]</code></pre>
+    </div>
+    <div class="card green">
+      <h3>Multi-Agent Crew</h3>
+      <pre><code class="language-python"># main.py
+from crewai import Agent, Task, Crew
+
+researcher = Agent(
+    role="Researcher",
+    goal="Find accurate information",
+    llm="ollama/llama3.1:8b",
+    llm_config={"base_url": "http://ollama:11434"}
+)
+writer = Agent(
+    role="Writer",
+    goal="Write clear reports",
+    llm="ollama/llama3.1:8b",
+    llm_config={"base_url": "http://ollama:11434"}
+)
+crew = Crew(agents=[researcher, writer],
+            tasks=[...])
+crew.kickoff()</code></pre>
+    </div>
+  </div>
+  <p><span class="g">Pattern:</span> CrewAI agents point to <code>http://ollama:11434</code> &mdash; the Docker Compose service name. No localhost, no IP addresses.</p>
+</section>
+
+<!-- ============ SLIDE 11: AGENT STACK WITH DOCKER COMPOSE ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">10</span><h2>Agent Stack: Ollama + ChromaDB + Agent</h2></div>
+  <pre><code class="language-yaml">version: "3.9"
+services:
+  ollama:
+    image: ollama/ollama
+    ports: ["11434:11434"]
+    volumes: [ollama_data:/root/.ollama]
+    deploy:
+      resources:
+        reservations:
+          devices: [{ capabilities: [gpu], count: 1 }]
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports: ["8000:8000"]
+    volumes: [chroma_data:/chroma/chroma]
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+
+  agent:
+    build: ./agent
+    depends_on: [ollama, chromadb]
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    ports: ["8080:8080"]
+
+volumes:
+  ollama_data:
+  chroma_data:</code></pre>
+  <div class="ss-row" style="justify-content:center; margin-top:.3em;">
+    <span class="ss-node active">Agent :8080</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">Ollama :11434</span>
+    <span class="ss-arrow">&larr;</span>
+    <span class="ss-node" style="border-color:var(--blue);color:var(--blue);">ChromaDB :8000</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 12: WHAT IS MCP ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">11</span><h2>What is MCP (Model Context Protocol)?</h2></div>
+  <p style="font-size:.6em;">MCP is an <span class="a">open standard</span> (by Anthropic) that lets LLMs interact with external systems through a unified protocol.</p>
+  <div class="cols cols-3" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3>Tools</h3>
+      <p>Functions the model can call &mdash; run SQL, search the web, call APIs, execute code.</p>
+    </div>
+    <div class="card green">
+      <h3>Resources</h3>
+      <p>Data the model can read &mdash; files, database rows, API responses, live metrics.</p>
+    </div>
+    <div class="card purple">
+      <h3>Prompts</h3>
+      <p>Reusable prompt templates exposed by the server for common workflows.</p>
+    </div>
+  </div>
+  <div class="ss-row" style="justify-content:center; margin-top:.5em;">
+    <span class="ss-node active">LLM / Agent</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">MCP Client</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node" style="border-color:var(--amber);color:var(--amber);">MCP Server</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node" style="border-color:var(--blue);color:var(--blue);">External System</span>
+  </div>
+  <p style="margin-top:.3em;"><span class="g">Key idea:</span> MCP replaces bespoke tool integrations with a single protocol. One client can talk to any MCP server &mdash; like USB-C for AI tools.</p>
+</section>
+
+<!-- ============ SLIDE 13: WHY MCP IN DOCKER ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">12</span><h2>Why Run MCP Servers in Docker?</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Isolation &amp; Security</h3>
+      <ul>
+        <li>Each MCP server gets its own filesystem and network namespace</li>
+        <li>A compromised filesystem tool cannot access the database server</li>
+        <li>Secrets are scoped per container via environment variables</li>
+        <li>Read-only filesystem for servers that only need to read</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Portability &amp; Ops</h3>
+      <ul>
+        <li>Ship MCP servers as images &mdash; no Node/Python/Rust install required</li>
+        <li>Version-pin server images for reproducible deployments</li>
+        <li>Health checks and auto-restart via Docker Compose</li>
+        <li>Logging via <code>docker logs</code> with structured JSON output</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card purple" style="margin-top:.3em;">
+    <h3>Transport Modes</h3>
+    <table>
+      <tr><th>Transport</th><th>Docker Approach</th><th>Use Case</th></tr>
+      <tr><td><span class="a">stdio</span></td><td><code>docker run -i</code> (interactive, pipe stdin/stdout)</td><td>Local dev, single client</td></tr>
+      <tr><td><span class="g">SSE</span></td><td><code>docker run -p 3001:3001</code> (HTTP endpoint)</td><td>Remote clients, multi-tenant</td></tr>
+      <tr><td><span class="b">Streamable HTTP</span></td><td><code>docker run -p 3001:3001</code> (HTTP endpoint)</td><td>Modern MCP, bidirectional</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ SLIDE 14: CONTAINERISING MCP SERVERS ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">13</span><h2>Containerising MCP Servers</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Dockerfile for an MCP Server</h3>
+      <pre><code class="language-dockerfile">FROM node:22-slim
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --production
+
+COPY src/ ./src/
+
+# SSE transport on port 3001
+ENV MCP_TRANSPORT=sse
+ENV MCP_PORT=3001
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+CMD ["node", "src/index.js"]</code></pre>
+    </div>
+    <div class="card green">
+      <h3>MCP Client Configuration</h3>
+      <pre><code class="language-json">{
+  "mcpServers": {
+    "filesystem": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-v", "/data:/data:ro",
+        "mcp/filesystem-server",
+        "/data"
+      ]
+    },
+    "postgres": {
+      "url": "http://localhost:3002/sse",
+      "env": {
+        "POSTGRES_URL": "postgresql://..."
+      }
+    }
+  }
+}</code></pre>
+    </div>
+  </div>
+  <p><span class="a">stdio via Docker:</span> Use <code>docker run -i</code> so the MCP client can pipe JSON-RPC over stdin/stdout. The container acts like a local binary.</p>
+</section>
+
+<!-- ============ SLIDE 15: DOCKER COMPOSE FOR MCP STACKS ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">14</span><h2>Docker Compose for MCP Server Stacks</h2></div>
+  <pre><code class="language-yaml">version: "3.9"
+services:
+  mcp-filesystem:
+    image: mcp/filesystem-server
+    volumes:
+      - ./workspace:/data:ro
+    environment:
+      - MCP_TRANSPORT=sse
+      - MCP_PORT=3001
+    ports: ["3001:3001"]
+
+  mcp-postgres:
+    image: mcp/postgres-server
+    environment:
+      - POSTGRES_URL=postgresql://user:pass@db:5432/mydb
+      - MCP_TRANSPORT=sse
+      - MCP_PORT=3002
+    ports: ["3002:3002"]
+    depends_on: [db]
+
+  mcp-brave-search:
+    image: mcp/brave-search
+    environment:
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - MCP_TRANSPORT=sse
+      - MCP_PORT=3003
+    ports: ["3003:3003"]
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_PASSWORD=pass
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+volumes:
+  pgdata:</code></pre>
+</section>
+
+<!-- ============ SLIDE 16: WHAT IS AN MCP GATEWAY ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">15</span><h2>What is an MCP Gateway?</h2></div>
+  <p style="font-size:.58em;">An MCP Gateway sits between clients and MCP servers, providing a <span class="a">single endpoint</span> that aggregates, secures, and routes tool calls across multiple backends.</p>
+  <div class="ss-row" style="justify-content:center; margin:.4em 0;">
+    <span class="ss-node">Claude / Agent</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">MCP Gateway</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">MCP: Filesystem</span>
+  </div>
+  <div class="ss-row" style="justify-content:center; margin-bottom:.4em;">
+    <span style="visibility:hidden" class="ss-node">Claude / Agent</span>
+    <span style="visibility:hidden" class="ss-arrow">&rarr;</span>
+    <span style="visibility:hidden" class="ss-node active">MCP Gateway</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">MCP: Database</span>
+  </div>
+  <div class="ss-row" style="justify-content:center; margin-bottom:.3em;">
+    <span style="visibility:hidden" class="ss-node">Claude / Agent</span>
+    <span style="visibility:hidden" class="ss-arrow">&rarr;</span>
+    <span style="visibility:hidden" class="ss-node active">MCP Gateway</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">MCP: Search API</span>
+  </div>
+  <div class="cols cols-3" style="margin-top:.2em;">
+    <div class="card amber">
+      <h3>Aggregation</h3>
+      <p>Combine tools from multiple MCP servers into a single tool list for the client.</p>
+    </div>
+    <div class="card green">
+      <h3>Auth &amp; Access Control</h3>
+      <p>API keys, OAuth, RBAC &mdash; enforce who can call which tools.</p>
+    </div>
+    <div class="card purple">
+      <h3>Protocol Bridge</h3>
+      <p>Convert stdio servers to SSE/HTTP. Translate between transport modes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 17: SUPERGATEWAY & SSE BRIDGES ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">16</span><h2>Supergateway &amp; SSE Bridges</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Supergateway</h3>
+      <p>Wraps any <span class="a">stdio MCP server</span> and exposes it as an <span class="g">SSE endpoint</span>.</p>
+      <pre><code class="language-bash">docker run -p 3001:3001 \
+  supercorp/supergateway \
+  --stdio "npx -y @modelcontextprotocol/server-filesystem /data" \
+  --port 3001</code></pre>
+      <ul>
+        <li>Turns local-only servers into network-accessible services</li>
+        <li>No code changes to the MCP server needed</li>
+        <li>Supports multiple simultaneous client connections</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>mcp-proxy</h3>
+      <p>Lightweight proxy that bridges between SSE and stdio transports.</p>
+      <pre><code class="language-bash"># SSE to stdio bridge
+docker run -p 3002:3002 \
+  sparfenyuk/mcp-proxy \
+  --sse-port 3002 \
+  --command "python mcp_server.py"
+
+# Connect remote SSE from a stdio client
+mcp-proxy --sse-url http://remote:3001/sse</code></pre>
+    </div>
+  </div>
+  <p><span class="p">Why bridges matter:</span> Claude Desktop and Cursor only support stdio. Bridges let you run MCP servers anywhere and connect them to local clients.</p>
+</section>
+
+<!-- ============ SLIDE 18: GATEWAY COMPOSE ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">17</span><h2>Docker Compose: Gateway + MCP Servers</h2></div>
+  <pre><code class="language-yaml">version: "3.9"
+services:
+  gateway:
+    image: supercorp/supergateway
+    ports: ["3000:3000"]
+    environment:
+      - GATEWAY_PORT=3000
+      - AUTH_TOKEN=${GATEWAY_AUTH_TOKEN}
+    depends_on: [mcp-filesystem, mcp-postgres, mcp-search]
+
+  mcp-filesystem:
+    image: mcp/filesystem-server
+    volumes: [./workspace:/data:ro]
+    environment: { MCP_TRANSPORT: sse, MCP_PORT: "3001" }
+    expose: ["3001"]
+
+  mcp-postgres:
+    image: mcp/postgres-server
+    environment:
+      POSTGRES_URL: postgresql://user:pass@db:5432/app
+      MCP_TRANSPORT: sse
+      MCP_PORT: "3002"
+    expose: ["3002"]
+    depends_on: [db]
+
+  mcp-search:
+    image: mcp/brave-search
+    environment:
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+      MCP_TRANSPORT: sse
+      MCP_PORT: "3003"
+    expose: ["3003"]
+
+  db:
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: pass }
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+volumes:
+  pgdata:</code></pre>
+  <p><span class="a">Note:</span> Internal MCP servers use <code>expose</code> (not <code>ports</code>) &mdash; only the gateway is publicly accessible.</p>
+</section>
+
+<!-- ============ SLIDE 19: AUTH & ACCESS CONTROL ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">18</span><h2>Gateway Auth &amp; Access Control</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Authentication Patterns</h3>
+      <ul>
+        <li><span class="a">Bearer tokens</span> &mdash; Simple API key in Authorization header</li>
+        <li><span class="g">OAuth 2.0 / OIDC</span> &mdash; MCP spec supports OAuth flows natively</li>
+        <li><span class="p">mTLS</span> &mdash; Client certificates for service-to-service</li>
+        <li><span class="b">API gateway</span> &mdash; Kong, Traefik, or Envoy in front of MCP</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Access Control</h3>
+      <ul>
+        <li><span class="a">Tool-level RBAC</span> &mdash; User A can read files, User B can write</li>
+        <li><span class="g">Rate limiting</span> &mdash; Prevent runaway agent tool loops</li>
+        <li><span class="p">Audit logging</span> &mdash; Log every tool call with user, input, output</li>
+        <li><span class="b">Allowlists</span> &mdash; Restrict which tools are exposed per client</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-yaml"># Gateway config with auth
+gateway:
+  auth:
+    type: bearer
+    tokens:
+      - token: ${ADMIN_TOKEN}
+        role: admin
+        allowed_tools: ["*"]
+      - token: ${READONLY_TOKEN}
+        role: reader
+        allowed_tools: ["filesystem.read", "search.*"]
+  rate_limit:
+    requests_per_minute: 60
+    burst: 10</code></pre>
+</section>
+
+<!-- ============ SLIDE 20: PRODUCTION GATEWAY PATTERNS ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">19</span><h2>Production MCP Gateway Patterns</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Gateway Playground</h3>
+      <pre><code class="language-yaml">services:
+  gateway:
+    image: supercorp/supergateway
+    ports: ["3000:3000"]
+
+  web-ui:
+    image: mcp/inspector
+    ports: ["5173:5173"]
+    environment:
+      - MCP_SERVER_URL=http://gateway:3000/sse
+
+  mcp-everything:
+    image: mcp/everything-server
+    expose: ["3001"]</code></pre>
+      <p>Use <span class="a">MCP Inspector</span> as a web UI to test and debug tool calls through the gateway.</p>
+    </div>
+    <div class="card green">
+      <h3>High Availability</h3>
+      <ul>
+        <li><span class="a">Replicas</span> &mdash; <code>deploy: { replicas: 3 }</code> for gateway instances</li>
+        <li><span class="g">Load balancer</span> &mdash; Traefik or HAProxy in front of gateway replicas</li>
+        <li><span class="p">Health checks</span> &mdash; Gateway pings each MCP server; removes unhealthy ones</li>
+        <li><span class="b">Circuit breakers</span> &mdash; Fail fast if an MCP server is down</li>
+        <li><span class="r">Graceful degradation</span> &mdash; Return partial tool list if some servers are unavailable</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card purple" style="margin-top:.3em;">
+    <h3>Observability Stack</h3>
+    <p>Add Prometheus + Grafana to monitor tool call latency, error rates, and token usage across all MCP servers. Export logs to Loki for centralised search.</p>
+  </div>
+</section>
+
+<!-- ============ SLIDE 21: HEALTH CHECKS & MONITORING ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">20</span><h2>Health Checks &amp; Monitoring</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>LLM Container Health Checks</h3>
+      <pre><code class="language-yaml">services:
+  ollama:
+    image: ollama/ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f",
+             "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s</code></pre>
+    </div>
+    <div class="card green">
+      <h3>GPU Monitoring</h3>
+      <pre><code class="language-bash"># Real-time GPU stats
+docker run --gpus all --rm \
+  nvidia/cuda:12.4.0-base-ubuntu22.04 \
+  nvidia-smi --query-gpu=\
+utilization.gpu,memory.used,\
+memory.total,temperature.gpu \
+  --format=csv -l 5
+
+# DCGM Exporter for Prometheus
+docker run --gpus all -p 9400:9400 \
+  nvcr.io/nvidia/k8s/dcgm-exporter:latest</code></pre>
+    </div>
+  </div>
+  <div class="card purple" style="margin-top:.3em;">
+    <h3>Key Metrics to Monitor</h3>
+    <div class="cols cols-3">
+      <div>
+        <p><span class="a">LLM Inference</span></p>
+        <ul><li>Tokens/second</li><li>Time to first token</li><li>Queue depth</li></ul>
+      </div>
+      <div>
+        <p><span class="g">MCP Servers</span></p>
+        <ul><li>Tool call latency</li><li>Error rate</li><li>Active connections</li></ul>
+      </div>
+      <div>
+        <p><span class="p">GPU</span></p>
+        <ul><li>VRAM usage %</li><li>Compute utilisation %</li><li>Temperature</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 22: SCALING & COST ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">21</span><h2>Scaling &amp; Cost Optimisation</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Scaling Strategies</h3>
+      <table>
+        <tr><th>Strategy</th><th>Tool</th><th>Best For</th></tr>
+        <tr><td>Horizontal replicas</td><td>Compose <code>--scale</code></td><td>Stateless agents</td></tr>
+        <tr><td>GPU scheduling</td><td>Kubernetes + GPU operator</td><td>Multi-model clusters</td></tr>
+        <tr><td>Serverless inference</td><td>KNative / Cloud Run GPU</td><td>Bursty workloads</td></tr>
+        <tr><td>Model sharding</td><td>vLLM tensor parallelism</td><td>Large models</td></tr>
+      </table>
+    </div>
+    <div class="card green">
+      <h3>Cost Optimisation</h3>
+      <ul>
+        <li><span class="a">Right-size GPU allocation</span> &mdash; Use <code>nvidia-smi</code> to find actual VRAM usage, then constrain</li>
+        <li><span class="g">Quantisation</span> &mdash; AWQ/GPTQ/GGUF reduce VRAM by 50-75%</li>
+        <li><span class="p">Model caching</span> &mdash; Shared volumes avoid redundant downloads</li>
+        <li><span class="b">Auto-scaling to zero</span> &mdash; Scale down idle inference containers</li>
+        <li><span class="r">Spot/preemptible instances</span> &mdash; Use for batch inference workloads</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-yaml"># Kubernetes GPU scheduling example
+resources:
+  limits:
+    nvidia.com/gpu: 1        # Request exactly 1 GPU
+    memory: "16Gi"
+  requests:
+    nvidia.com/gpu: 1
+    memory: "12Gi"
+nodeSelector:
+  gpu-type: "a100-40gb"      # Target specific GPU type</code></pre>
+</section>
+
+<!-- ============ SLIDE 23: SUMMARY ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">22</span><h2>Summary &amp; Key Takeaways</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>LLMs in Docker</h3>
+      <ul>
+        <li>Use <code>--gpus</code> + nvidia-container-toolkit</li>
+        <li>Mount model weights as volumes, never bake into images</li>
+        <li>Ollama, vLLM, and TGI all have official Docker images</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Agents in Docker</h3>
+      <ul>
+        <li>Sandbox agent tool execution in containers</li>
+        <li>Docker Compose for agent + LLM + vector DB stacks</li>
+        <li>Use service names for inter-container networking</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>MCP in Docker</h3>
+      <ul>
+        <li>stdio via <code>docker run -i</code>, SSE via port mapping</li>
+        <li>Isolate each MCP server in its own container</li>
+        <li>Environment variables for secrets and configuration</li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3>MCP Gateways</h3>
+      <ul>
+        <li>Single entry point for all MCP servers</li>
+        <li>Auth, rate limiting, and audit logging at the gateway</li>
+        <li>Supergateway bridges stdio servers to SSE</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ss-row" style="justify-content:center; margin-top:.5em;">
+    <span class="ss-node active">LLM</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Agent</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">MCP Server</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Gateway</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Client</span>
+  </div>
+</section>
+
+<!-- ============ SLIDE 24: FURTHER READING ============ -->
+<section>
+  <div class="slide-hdr"><span class="tag">23</span><h2>Further Reading &amp; Resources</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>LLM Serving</h3>
+      <ul>
+        <li><a href="https://ollama.com" style="color:var(--blue);">ollama.com</a> &mdash; Ollama documentation</li>
+        <li><a href="https://docs.vllm.ai" style="color:var(--blue);">docs.vllm.ai</a> &mdash; vLLM docs</li>
+        <li><a href="https://huggingface.co/docs/text-generation-inference" style="color:var(--blue);">HuggingFace TGI</a> &mdash; Text Generation Inference</li>
+        <li><a href="https://github.com/ggerganov/llama.cpp" style="color:var(--blue);">llama.cpp</a> &mdash; CPU/GPU inference</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>MCP Ecosystem</h3>
+      <ul>
+        <li><a href="https://modelcontextprotocol.io" style="color:var(--blue);">modelcontextprotocol.io</a> &mdash; MCP specification</li>
+        <li><a href="https://github.com/modelcontextprotocol/servers" style="color:var(--blue);">MCP Servers repo</a> &mdash; Official server implementations</li>
+        <li><a href="https://github.com/supercorp-ai/supergateway" style="color:var(--blue);">Supergateway</a> &mdash; stdio to SSE bridge</li>
+        <li><a href="https://github.com/nicholaschenai/mcp-proxy" style="color:var(--blue);">mcp-proxy</a> &mdash; MCP transport proxy</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Agent Frameworks</h3>
+      <ul>
+        <li><a href="https://langchain-ai.github.io/langgraph/" style="color:var(--blue);">LangGraph</a> &mdash; Agent orchestration</li>
+        <li><a href="https://docs.crewai.com" style="color:var(--blue);">CrewAI</a> &mdash; Multi-agent framework</li>
+        <li><a href="https://docs.anthropic.com" style="color:var(--blue);">Claude API</a> &mdash; Anthropic documentation</li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3>Docker &amp; GPU</h3>
+      <ul>
+        <li><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit" style="color:var(--blue);">NVIDIA Container Toolkit</a></li>
+        <li><a href="https://docs.docker.com/compose/" style="color:var(--blue);">Docker Compose</a> &mdash; Multi-container apps</li>
+        <li><a href="https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/" style="color:var(--blue);">Kubernetes GPU scheduling</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="meta" style="text-align:center; margin-top:.5em;">Brendan Lynskey &mdash; 2026</p>
+</section>
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/monokai.min.css">
+<script>
+Reveal.initialize({ hash:true, slideNumber:'c/t', transition:'fade', transitionSpeed:'fast', controls:true, progress:true, center:false, width:1100, height:900, margin:0.01, plugins:[RevealHighlight], highlight:{theme:'monokai'} });
+</script>
+<script>
+(function(){ var h=Reveal.getConfig().height||900; var m=Reveal.getConfig().margin||0.02; var maxH=Math.floor(h*(1-2*m))+'px'; function fixSlides(){ document.querySelectorAll('.reveal .slides>section,.reveal .slides>section>section').forEach(function(s){ s.style.display='block'; s.style.maxHeight=maxH; }); } Reveal.on('ready',fixSlides); Reveal.on('slidechanged',fixSlides); })();
+</script>
+</body></html>
