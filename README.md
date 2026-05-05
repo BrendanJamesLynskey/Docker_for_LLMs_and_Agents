@@ -21,3 +21,9 @@ Visit: [https://brendanjameslynskey.github.io/Docker_for_LLMs_and_Agents/](https
 - MCP servers in Docker (stdio vs SSE transport)
 - MCP Gateways, Supergateway, and SSE bridges
 - Production patterns: health checks, monitoring, scaling, cost optimisation
+
+## See also
+
+- [Cloud_aaS_06_LLM_aaS](https://github.com/BrendanJamesLynskey/Cloud_aaS_06_LLM_aaS) — the managed-LLM companion (OpenAI, Anthropic, Bedrock, Vertex, Together, Groq, RAG-aaS, agents-aaS, evals, MCP hosting, governance) in the [Cloud `*aaS` series](https://github.com/BrendanJamesLynskey/Cloud_aaS_Hub).
+- [LLMs hub](https://github.com/BrendanJamesLynskey/LLMs) — full umbrella index for AI / agentic content.
+- [Local LLM Hosting sub-hub](https://github.com/BrendanJamesLynskey/LLM_Hub_Local_LLM_Hosting) — the broader self-hosted treatment.
